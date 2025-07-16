@@ -20,6 +20,7 @@ const showWireframeCheckbox = document.getElementById('show-wireframe');
 let wireframeGroup = null; // 移到这里
 if (showWireframeCheckbox) {
   showWireframeCheckbox.addEventListener('change', () => {
+    const densitySliderLabel = document.getElementById('density-slider-label');
     if (showWireframeCheckbox.checked) {
       // 显示完整模型线框，隐藏平面效果
       if (wireframeGroup) {
@@ -28,6 +29,7 @@ if (showWireframeCheckbox) {
       if (window.dl) {
         window.dl.visible = false;
       }
+      if (densitySliderLabel) densitySliderLabel.style.display = 'inline-block';
     } else {
       // 隐藏线框，显示平面效果
       if (wireframeGroup) {
@@ -36,6 +38,7 @@ if (showWireframeCheckbox) {
       if (window.dl) {
         window.dl.visible = true;
       }
+      if (densitySliderLabel) densitySliderLabel.style.display = 'none';
     }
   });
 }
@@ -88,6 +91,25 @@ if (exportPngButton) {
   });
 }
 
+// 监听线条密度滑块
+const densitySlider = document.getElementById('line-density-slider');
+if (densitySlider) {
+  densitySlider.addEventListener('input', (e) => {
+    const density = parseFloat(e.target.value);
+    const densityValueSpan = document.getElementById('density-value');
+    if (densityValueSpan) {
+      densityValueSpan.textContent = density;
+    }
+    if (wireframeGroup) {
+      wireframeGroup.children.forEach(mesh => {
+        if (mesh.material && mesh.material.uniforms && mesh.material.uniforms.uLineDensity) {
+          mesh.material.uniforms.uLineDensity.value = density;
+        }
+      });
+    }
+  });
+}
+
 // 监听文件上传
 const uploadInput = document.getElementById('glb-upload');
 if (uploadInput) {
@@ -120,7 +142,8 @@ if (uploadInput) {
           const lineMaterial = new THREE.ShaderMaterial({
             uniforms: {
               uColor: { value: new THREE.Color(lineColorInput ? lineColorInput.value : '#ffffff') },
-              uLineDensity: { value: 70.0 } // 调整此值可改变线条密度
+              uLineDensity: { value: densitySlider ? parseFloat(densitySlider.value) : 70.0 }, // 初始值来自滑块
+              uLineThickness: { value: 0.1 } // 调整此值可改变线条粗细
             },
             vertexShader: `
               varying vec3 vWorldPosition;
@@ -133,9 +156,10 @@ if (uploadInput) {
             fragmentShader: `
               uniform vec3 uColor;
               uniform float uLineDensity;
+              uniform float uLineThickness;
               varying vec3 vWorldPosition;
               void main() {
-                if (fract(vWorldPosition.y * uLineDensity) > 0.5) {
+                if (fract(vWorldPosition.y * uLineDensity) > uLineThickness) {
                   discard;
                 }
                 gl_FragColor = vec4(uColor, 1.0);
