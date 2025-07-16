@@ -26,6 +26,18 @@ if (uploadInput) {
       const gltf = await loader.loadAsync(url);
       // 只取第一个子对象
       const newHead = gltf.scene.children[0];
+      // 自动居中和缩放
+      const box = new THREE.Box3().setFromObject(newHead);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = maxDim > 0 ? 9 / maxDim : 1; // 目标最大尺寸为9
+      newHead.scale.setScalar(scale);
+      // 再次计算缩放后的包围盒，居中
+      const box2 = new THREE.Box3().setFromObject(newHead);
+      const center = new THREE.Vector3();
+      box2.getCenter(center);
+      newHead.position.sub(center); // 平移到原点
       // 替换DisplacedLines中的head
       if (window.dl && window.dl.depthMap) {
         // 替换head引用
