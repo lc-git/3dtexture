@@ -15,13 +15,47 @@ let head = (
 // 记录当前head对象，便于后续替换
 let currentHead = head;
 
+// 监听显示完整模型线框复选框
+const showWireframeCheckbox = document.getElementById('show-wireframe');
+let wireframeGroup = null; // 移到这里
+if (showWireframeCheckbox) {
+  showWireframeCheckbox.addEventListener('change', () => {
+    if (showWireframeCheckbox.checked) {
+      // 显示完整模型线框，隐藏平面效果
+      if (wireframeGroup) {
+        scene.add(wireframeGroup);
+      }
+      if (window.dl) {
+        window.dl.visible = false;
+      }
+    } else {
+      // 隐藏线框，显示平面效果
+      if (wireframeGroup) {
+        scene.remove(wireframeGroup);
+      }
+      if (window.dl) {
+        window.dl.visible = true;
+      }
+    }
+  });
+}
+
 // 监听线条颜色选择器
 const lineColorInput = document.getElementById('line-color');
 if (lineColorInput) {
   lineColorInput.addEventListener('input', (e) => {
     const color = new THREE.Color(e.target.value);
+    // 更新平面线条颜色
     if (window.dl && window.dl.material) {
       window.dl.material.color.copy(color);
+    }
+    // 更新线框颜色
+    if (wireframeGroup) {
+      wireframeGroup.children.forEach(wireframe => {
+        if (wireframe.material && wireframe.material.uniforms && wireframe.material.uniforms.uColor) {
+          wireframe.material.uniforms.uColor.value.copy(color);
+        }
+      });
     }
   });
 }
@@ -77,6 +111,70 @@ if (uploadInput) {
       const center = new THREE.Vector3();
       box2.getCenter(center);
       newHead.position.sub(center); // 平移到原点
+      // 生成完整模型线框
+      if (wireframeGroup) scene.remove(wireframeGroup);
+      wireframeGroup = new THREE.Group();
+      
+      gltf.scene.traverse((child) => {
+        if (child.isMesh) {
+          const lineMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              uColor: { value: new THREE.Color(lineColorInput ? lineColorInput.value : '#ffffff') },
+              uLineDensity: { value: 70.0 } // 调整此值可改变线条密度
+            },
+            vertexShader: `
+              varying vec3 vWorldPosition;
+              void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * viewMatrix * worldPosition;
+              }
+            `,
+            fragmentShader: `
+              uniform vec3 uColor;
+              uniform float uLineDensity;
+              varying vec3 vWorldPosition;
+              void main() {
+                if (fract(vWorldPosition.y * uLineDensity) > 0.5) {
+                  discard;
+                }
+                gl_FragColor = vec4(uColor, 1.0);
+              }
+            `
+          });
+          const meshWithLines = new THREE.Mesh(child.geometry, lineMaterial);
+          
+          // 应用子对象的变换
+          meshWithLines.position.copy(child.position);
+          meshWithLines.rotation.copy(child.rotation);
+          meshWithLines.scale.copy(child.scale);
+          
+          wireframeGroup.add(meshWithLines);
+        }
+      });
+      
+      // 对整个线框组应用缩放和居中
+      const wireframeBox = new THREE.Box3().setFromObject(wireframeGroup);
+      const wireframeSize = new THREE.Vector3();
+      wireframeBox.getSize(wireframeSize);
+      const wireframeMaxDim = Math.max(wireframeSize.x, wireframeSize.y, wireframeSize.z);
+      const wireframeScale = wireframeMaxDim > 0 ? 9 / wireframeMaxDim : 1;
+      wireframeGroup.scale.setScalar(wireframeScale);
+      
+      // 居中线框组
+      const wireframeBox2 = new THREE.Box3().setFromObject(wireframeGroup);
+      const wireframeCenter = new THREE.Vector3();
+      wireframeBox2.getCenter(wireframeCenter);
+      wireframeGroup.position.sub(wireframeCenter);
+      
+      // 根据复选框状态决定显示模式
+      if (showWireframeCheckbox && showWireframeCheckbox.checked) {
+        scene.add(wireframeGroup);
+        if (window.dl) window.dl.visible = false;
+      } else {
+        scene.remove(wireframeGroup);
+        if (window.dl) window.dl.visible = true;
+      }
       // 替换DisplacedLines中的head
       if (window.dl && window.dl.depthMap) {
         // 替换head引用
