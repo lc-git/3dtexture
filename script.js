@@ -15,6 +15,17 @@ let head = (
 // 记录当前head对象，便于后续替换
 let currentHead = head;
 
+// 监听线条颜色选择器
+const lineColorInput = document.getElementById('line-color');
+if (lineColorInput) {
+  lineColorInput.addEventListener('input', (e) => {
+    const color = new THREE.Color(e.target.value);
+    if (window.dl && window.dl.material) {
+      window.dl.material.color.copy(color);
+    }
+  });
+}
+
 // 监听文件上传
 const uploadInput = document.getElementById('glb-upload');
 if (uploadInput) {
