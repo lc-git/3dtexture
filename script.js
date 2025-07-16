@@ -26,6 +26,34 @@ if (lineColorInput) {
   });
 }
 
+// 监听导出PNG按钮
+const exportPngButton = document.getElementById('export-png');
+if (exportPngButton) {
+  exportPngButton.addEventListener('click', () => {
+    // 临时切换到透明背景用于导出
+    renderer.setClearColor(0x000000, 0);
+    
+    // 确保渲染一次最新画面
+    renderer.render(scene, camera);
+    
+    // 将canvas内容转为数据URL
+    const dataURL = renderer.domElement.toDataURL('image/png');
+    
+    // 恢复黑色背景用于展示
+    renderer.setClearColor(0x000000, 1);
+    
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.download = `3dtexture_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+    link.href = dataURL;
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+}
+
 // 监听文件上传
 const uploadInput = document.getElementById('glb-upload');
 if (uploadInput) {
@@ -175,9 +203,10 @@ let scene = new THREE.Scene();
 //scene.background = new THREE.Color(0x444444);
 let camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 1000);
 camera.position.set(0, -0.4, 1).setLength(10);
-let renderer = new THREE.WebGLRenderer({ antialias: true });
+let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth * dpr, innerHeight * dpr);
+renderer.setClearColor(0x000000, 1); // 设置黑色背景用于展示
 document.body.appendChild(renderer.domElement);
 
 window.addEventListener("resize", (event) => {
