@@ -12,6 +12,40 @@ let head = (
   )
 ).scene.children[0];
 
+// 记录当前head对象，便于后续替换
+let currentHead = head;
+
+// 监听文件上传
+const uploadInput = document.getElementById('glb-upload');
+if (uploadInput) {
+  uploadInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    try {
+      const gltf = await loader.loadAsync(url);
+      // 只取第一个子对象
+      const newHead = gltf.scene.children[0];
+      // 替换DisplacedLines中的head
+      if (window.dl && window.dl.depthMap) {
+        // 替换head引用
+        currentHead = newHead;
+        head = newHead;
+        // 重新渲染depthMap
+        window.dl.depthMap.render = function() {
+          renderer.setRenderTarget(this);
+          renderer.render(currentHead, this.camera);
+          renderer.setRenderTarget(null);
+        };
+        window.dl.depthMap.render();
+      }
+    } catch (err) {
+      alert('GLB文件加载失败: ' + err.message);
+    }
+    URL.revokeObjectURL(url);
+  });
+}
+
 class DepthMap extends THREE.WebGLRenderTarget{
   constructor(){
     super(innerWidth, innerHeight);
@@ -144,6 +178,8 @@ scene.add(light, new THREE.AmbientLight(0xffffff, Math.PI * 0.25));
 
 let dl = new DisplacedLines();
 scene.add(dl);
+// 方便上传后访问DisplacedLines实例
+window.dl = dl;
 
 ////////
 
