@@ -10,6 +10,9 @@ let head = (
   await loader.loadAsync("./demo.glb")
 ).scene.children[0];
 
+// 初始模型沿y轴旋转-90度
+head.rotation.y = -Math.PI / 2;
+
 // 自动居中和缩放初始模型（与上传模型保持一致）
 const box = new THREE.Box3().setFromObject(head);
 const size = new THREE.Vector3();
@@ -100,7 +103,7 @@ if (exportPngButton) {
 }
 
 // 监听切换角度按钮
-let currentAngle = 0;
+let currentAngle = -Math.PI / 2; // 初始角度为-90度
 const toggleAngleButton = document.getElementById('toggle-angle');
 if (toggleAngleButton) {
   toggleAngleButton.addEventListener('click', () => {
@@ -160,9 +163,9 @@ if (uploadInput) {
       const gltf = await loader.loadAsync(url);
       // 只取第一个子对象
       const newHead = gltf.scene.children[0];
-      // 重置角度
-      currentAngle = 0;
-      newHead.rotation.y = 0;
+      // 重置角度为-90度（与初始模型一致）
+      currentAngle = -Math.PI / 2;
+      newHead.rotation.y = -Math.PI / 2;
       // 自动居中和缩放
       const box = new THREE.Box3().setFromObject(newHead);
       const size = new THREE.Vector3();
