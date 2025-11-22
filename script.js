@@ -20,7 +20,6 @@ const showWireframeCheckbox = document.getElementById('show-wireframe');
 let wireframeGroup = null; // 移到这里
 if (showWireframeCheckbox) {
   showWireframeCheckbox.addEventListener('change', () => {
-    const densitySliderLabel = document.getElementById('density-slider-label');
     if (showWireframeCheckbox.checked) {
       // 显示完整模型线框，隐藏平面效果
       if (wireframeGroup) {
@@ -29,7 +28,6 @@ if (showWireframeCheckbox) {
       if (window.dl) {
         window.dl.visible = false;
       }
-      if (densitySliderLabel) densitySliderLabel.style.display = 'inline-block';
     } else {
       // 隐藏线框，显示平面效果
       if (wireframeGroup) {
@@ -38,7 +36,6 @@ if (showWireframeCheckbox) {
       if (window.dl) {
         window.dl.visible = true;
       }
-      if (densitySliderLabel) densitySliderLabel.style.display = 'none';
     }
   });
 }
@@ -119,12 +116,24 @@ if (densitySlider) {
     if (densityValueSpan) {
       densityValueSpan.textContent = density;
     }
+    
+    // 更新线框模式的密度
     if (wireframeGroup) {
       wireframeGroup.children.forEach(mesh => {
         if (mesh.material && mesh.material.uniforms && mesh.material.uniforms.uLineDensity) {
           mesh.material.uniforms.uLineDensity.value = density;
         }
       });
+    }
+    
+    // 更新平面效果的密度（通过重新生成几何体）
+    if (window.dl) {
+      const segmentsX = Math.floor(density * 7); // 将密度映射到segments数量
+      const segmentsY = Math.floor(density * 2.5);
+      let newGeometry = new THREE.PlaneGeometry(10, 10, segmentsX, segmentsY);
+      window.dl.ToQuads(newGeometry);
+      window.dl.geometry.dispose(); // 清理旧几何体
+      window.dl.geometry = newGeometry;
     }
   });
 }
