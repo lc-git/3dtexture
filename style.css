@@ -174,3 +174,19 @@ body {
 #export-png:active {
   transform: translateY(0);
 }
+
+/* Logo */
+.logo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  max-width: 120px;
+  height: auto;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.logo:hover {
+  opacity: 1;
+}
