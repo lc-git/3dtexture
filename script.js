@@ -91,6 +91,25 @@ if (exportPngButton) {
   });
 }
 
+// 监听切换角度按钮
+let currentAngle = 0;
+const toggleAngleButton = document.getElementById('toggle-angle');
+if (toggleAngleButton) {
+  toggleAngleButton.addEventListener('click', () => {
+    // 只在平面效果显示时才切换角度
+    if (!showWireframeCheckbox || !showWireframeCheckbox.checked) {
+      currentAngle += Math.PI / 2; // 旋转90度
+      if (currentHead) {
+        currentHead.rotation.y = currentAngle;
+      }
+      // 重新渲染depth map
+      if (window.dl && window.dl.depthMap) {
+        window.dl.depthMap.render();
+      }
+    }
+  });
+}
+
 // 监听线条密度滑块
 const densitySlider = document.getElementById('line-density-slider');
 if (densitySlider) {
@@ -121,6 +140,9 @@ if (uploadInput) {
       const gltf = await loader.loadAsync(url);
       // 只取第一个子对象
       const newHead = gltf.scene.children[0];
+      // 重置角度
+      currentAngle = 0;
+      newHead.rotation.y = 0;
       // 自动居中和缩放
       const box = new THREE.Box3().setFromObject(newHead);
       const size = new THREE.Vector3();
