@@ -6,9 +6,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 console.clear();
 
 const loader = new GLTFLoader();
-let head = (
-  await loader.loadAsync("./demo.glb")
-).scene.children[0];
+const initialGltf = await loader.loadAsync("./demo.glb");
+let head = initialGltf.scene.children[0];
 
 // 初始模型沿y轴旋转-90度
 head.rotation.y = -Math.PI / 2;
@@ -151,6 +150,62 @@ if (densitySlider) {
     }
   });
 }
+
+// 为初始模型生成线框
+wireframeGroup = new THREE.Group();
+initialGltf.scene.traverse((child) => {
+  if (child.isMesh) {
+    const lineMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: new THREE.Color(lineColorInput ? lineColorInput.value : '#ffffff') },
+        uLineDensity: { value: densitySlider ? parseFloat(densitySlider.value) : 70.0 },
+        uLineThickness: { value: 0.1 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uLineDensity;
+        uniform float uLineThickness;
+        varying vec3 vWorldPosition;
+        void main() {
+          if (fract(vWorldPosition.y * uLineDensity) > uLineThickness) {
+            discard;
+          }
+          gl_FragColor = vec4(uColor, 1.0);
+        }
+      `
+    });
+    const meshWithLines = new THREE.Mesh(child.geometry, lineMaterial);
+    
+    // 应用子对象的变换
+    meshWithLines.position.copy(child.position);
+    meshWithLines.rotation.copy(child.rotation);
+    meshWithLines.scale.copy(child.scale);
+    
+    wireframeGroup.add(meshWithLines);
+  }
+});
+
+// 对整个线框组应用缩放和居中
+const wireframeBox = new THREE.Box3().setFromObject(wireframeGroup);
+const wireframeSize = new THREE.Vector3();
+wireframeBox.getSize(wireframeSize);
+const wireframeMaxDim = Math.max(wireframeSize.x, wireframeSize.y, wireframeSize.z);
+const wireframeScale = wireframeMaxDim > 0 ? 9 / wireframeMaxDim : 1;
+wireframeGroup.scale.setScalar(wireframeScale);
+
+// 居中线框组
+const wireframeBox2 = new THREE.Box3().setFromObject(wireframeGroup);
+const wireframeCenter = new THREE.Vector3();
+wireframeBox2.getCenter(wireframeCenter);
+wireframeGroup.position.sub(wireframeCenter);
 
 // 监听文件上传
 const uploadInput = document.getElementById('glb-upload');
