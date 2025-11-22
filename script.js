@@ -7,10 +7,21 @@ console.clear();
 
 const loader = new GLTFLoader();
 let head = (
-  await loader.loadAsync(
-    "https://threejs.org/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb"
-  )
+  await loader.loadAsync("./demo.glb")
 ).scene.children[0];
+
+// 自动居中和缩放初始模型（与上传模型保持一致）
+const box = new THREE.Box3().setFromObject(head);
+const size = new THREE.Vector3();
+box.getSize(size);
+const maxDim = Math.max(size.x, size.y, size.z);
+const scale = maxDim > 0 ? 9 / maxDim : 1; // 目标最大尺寸为9
+head.scale.setScalar(scale);
+// 再次计算缩放后的包围盒，居中
+const box2 = new THREE.Box3().setFromObject(head);
+const center = new THREE.Vector3();
+box2.getCenter(center);
+head.position.sub(center); // 平移到原点
 
 // 记录当前head对象，便于后续替换
 let currentHead = head;
