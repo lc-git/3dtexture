@@ -26,7 +26,7 @@ body {
 }
 
 /* 文件上传按钮 */
-#glb-upload {
+.upload-button {
   width: 100%;
   height: 44px;
   background: linear-gradient(135deg, #5b9bd5 0%, #4a8bc2 100%);
@@ -45,14 +45,10 @@ body {
   line-height: 1;
 }
 
-#glb-upload:hover {
+.upload-button:hover {
   background: linear-gradient(135deg, #4a8bc2 0%, #3a7ab0 100%);
   box-shadow: 0 4px 12px rgba(91, 155, 213, 0.35);
   transform: translateY(-1px);
-}
-
-#glb-upload::file-selector-button {
-  display: none;
 }
 
 /* Label 容器 */
