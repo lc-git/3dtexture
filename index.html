@@ -15,17 +15,17 @@
   </script>
 </head>
 <body>
-  <input type="file" id="glb-upload" accept=".glb" style="position:absolute;z-index:10;top:10px;left:10px;" />
-  <label style="position:absolute;z-index:10;top:10px;left:180px;background:rgba(255,255,255,0.7);padding:2px 8px;border-radius:4px;">
-    线条颜色: <input type="color" id="line-color" value="#ffffff" />
-  </label>
-  <label style="position:absolute;z-index:10;top:10px;left:320px;background:rgba(255,255,255,0.7);padding:2px 8px;border-radius:4px;">
+  <input type="file" id="glb-upload" accept=".glb" style="position:absolute;z-index:10;top:15px;left:15px;" />
+  <label style="position:absolute;z-index:10;top:50px;left:15px;background:rgba(255,255,255,0.8);padding:6px 12px;border-radius:4px;">
     <input type="checkbox" id="show-wireframe" /> 显示完整模型线框
   </label>
-  <label id="density-slider-label" style="position:absolute;z-index:10;top:10px;left:500px;background:rgba(255,255,255,0.7);padding:2px 8px;border-radius:4px;display:none;">
-   线条密度: <input type="range" id="line-density-slider" min="1" max="80" value="70" step="1" /> <span id="density-value" style="display: inline-block; width: 30px;">70</span>
+  <label style="position:absolute;z-index:10;top:85px;left:15px;background:rgba(255,255,255,0.8);padding:6px 12px;border-radius:4px;">
+    线条颜色: <input type="color" id="line-color" value="#ffffff" />
   </label>
-  <button id="export-png" style="position:absolute;z-index:10;top:10px;left:750px;background:rgba(255,255,255,0.9);padding:4px 12px;border:1px solid #ccc;border-radius:4px;cursor:pointer;">
+  <label id="density-slider-label" style="position:absolute;z-index:10;top:120px;left:15px;background:rgba(255,255,255,0.8);padding:6px 12px;border-radius:4px;display:none;min-width:200px;">
+   线条密度: <input type="range" id="line-density-slider" min="1" max="80" value="70" step="1" style="width:100px;" /> <span id="density-value" style="display: inline-block; width: 30px;">70</span>
+  </label>
+  <button id="export-png" style="position:absolute;z-index:10;top:155px;left:15px;background:rgba(70,130,180,0.9);color:white;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;min-width:200px;">
     导出PNG
   </button>
   <script type="module" src="script.js"></script>
